@@ -4,347 +4,372 @@
 
 contextMenu = {}
 
-contextMenu.add = function(e) {
+contextMenu.add = function (e) {
 
-	let items = [
-		{ title: build.iconic('image') + 'Upload Photo', fn: () => $('#upload_files').click() },
-		{ },
-		{ title: build.iconic('link-intact') + 'Import from Link', fn: upload.start.url },
-		{ title: build.iconic('dropbox', 'ionicons') + 'Import from Dropbox', fn: upload.start.dropbox },
-		{ title: build.iconic('terminal') + 'Import from Server', fn: upload.start.server },
-		{ },
-		{ title: build.iconic('folder') + 'New Album', fn: album.add }
-	]
+    let items = [
+        {title: build.iconic('image') + 'Upload Photo', fn: () => $('#upload_files').click()},
+        {},
+        {title: build.iconic('link-intact') + 'Import from Link', fn: upload.start.url},
+        {title: build.iconic('dropbox', 'ionicons') + 'Import from Dropbox', fn: upload.start.dropbox},
+        {title: build.iconic('terminal') + 'Import from Server', fn: upload.start.server},
+        {},
+        {title: build.iconic('folder') + 'New Album', fn: album.add}
+    ]
 
-	basicContext.show(items, e.originalEvent)
+    basicContext.show(items, e.originalEvent)
 
-	upload.notify()
-
-}
-
-contextMenu.settings = function(e) {
-
-	let items = [
-		{ title: build.iconic('person') + 'Change Login', fn: settings.setLogin },
-		{ title: build.iconic('sort-ascending') + 'Change Sorting', fn: settings.setSorting },
-		{ title: build.iconic('dropbox', 'ionicons') + 'Set Dropbox', fn: settings.setDropboxKey },
-		{ },
-		{ title: build.iconic('info') + 'About Lychee', fn: () => window.open(lychee.website) },
-		{ title: build.iconic('wrench') + 'Diagnostics', fn: () => window.open('plugins/Diagnostics/') },
-		{ title: build.iconic('align-left') + 'Show Log', fn: () => window.open('plugins/Log/') },
-		{ },
-		{ title: build.iconic('account-logout') + 'Sign Out', fn: lychee.logout }
-	]
-
-	basicContext.show(items, e.originalEvent)
+    upload.notify()
 
 }
 
-contextMenu.album = function(albumID, e) {
+contextMenu.settings = function (e) {
 
-	// Notice for 'Merge':
-	// fn must call basicContext.close() first,
-	// in order to keep the selection
+    let items = [
+        {title: build.iconic('person') + 'Change Login', fn: settings.setLogin},
+        {title: build.iconic('sort-ascending') + 'Change Sorting', fn: settings.setSorting},
+        {title: build.iconic('dropbox', 'ionicons') + 'Set Dropbox', fn: settings.setDropboxKey},
+        {},
+        {title: build.iconic('wrench') + 'Diagnostics', fn: () => window.open('plugins/Diagnostics/')},
+        {title: build.iconic('align-left') + 'Show Log', fn: () => window.open('plugins/Log/')},
+        {},
+        {title: build.iconic('account-logout') + 'Sign Out', fn: lychee.logout}
+    ]
 
-	if (albumID==='0' || albumID==='f' || albumID==='s' || albumID==='r') return false
-
-	// Show merge-item when there's more than one album
-	let showMerge = (albums.json && albums.json.albums && Object.keys(albums.json.albums).length>1)
-
-	let items = [
-		{ title: build.iconic('pencil') + 'Rename', fn: () => album.setTitle([ albumID ]) },
-		{ title: build.iconic('collapse-left') + 'Merge', visible: showMerge, fn: () => { basicContext.close(); contextMenu.mergeAlbum(albumID, e) } },
-		{ title: build.iconic('trash') + 'Delete', fn: () => album.delete([ albumID ]) }
-	]
-
-	$('.album[data-id="' + albumID + '"]').addClass('active')
-
-	basicContext.show(items, e.originalEvent, contextMenu.close)
+    basicContext.show(items, e.originalEvent)
 
 }
 
-contextMenu.albumMulti = function(albumIDs, e) {
+contextMenu.album = function (albumID, e) {
 
-	multiselect.stopResize()
+    // Notice for 'Merge':
+    // fn must call basicContext.close() first,
+    // in order to keep the selection
 
-	// Automatically merge selected albums when albumIDs contains more than one album
-	// Show list of albums otherwise
-	let autoMerge = (albumIDs.length>1 ? true : false)
+    if (albumID === '0' || albumID === 'f' || albumID === 's' || albumID === 'r') return false
 
-	// Show merge-item when there's more than one album
-	let showMerge = (albums.json && albums.json.albums && Object.keys(albums.json.albums).length>1)
+    // Show merge-item when there's more than one album
+    let showMerge = (albums.json && albums.json.albums && Object.keys(albums.json.albums).length > 1)
 
-	let items = [
-		{ title: build.iconic('pencil') + 'Rename All', fn: () => album.setTitle(albumIDs) },
-		{ title: build.iconic('collapse-left') + 'Merge All', visible: showMerge && autoMerge, fn: () => album.merge(albumIDs) },
-		{ title: build.iconic('collapse-left') + 'Merge', visible: showMerge && !autoMerge, fn: () => { basicContext.close(); contextMenu.mergeAlbum(albumIDs[0], e) } },
-		{ title: build.iconic('trash') + 'Delete All', fn: () => album.delete(albumIDs) }
-	]
+    let items = [
+        {title: build.iconic('pencil') + 'Rename', fn: () => album.setTitle([albumID])},
+        {
+            title: build.iconic('collapse-left') + 'Merge', visible: showMerge, fn: () => {
+                basicContext.close();
+                contextMenu.mergeAlbum(albumID, e)
+            }
+        },
+        {title: build.iconic('trash') + 'Delete', fn: () => album.delete([albumID])}
+    ]
 
-	items.push()
+    $('.album[data-id="' + albumID + '"]').addClass('active')
 
-	basicContext.show(items, e.originalEvent, contextMenu.close)
-
-}
-
-contextMenu.albumTitle = function(albumID, e) {
-
-	api.post('Albums::get', {}, function(data) {
-
-		let items = []
-
-		if (data.albums && data.num>1) {
-
-			// Generate list of albums
-			$.each(data.albums, function() {
-
-				if (!this.thumbs[0]) this.thumbs[0] = 'src/images/no_cover.svg'
-				if (this.title==='') this.title = 'Untitled'
-
-				let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbs[0] }'><div class='title'>$${ this.title }</div>`
-
-				if (this.id!=albumID) items.push({
-					title: html,
-					fn: () => lychee.goto(this.id)
-				})
-
-			})
-
-			items.unshift({ })
-
-		}
-
-		items.unshift({ title: build.iconic('pencil') + 'Rename', fn: () => album.setTitle([ albumID ]) })
-
-		basicContext.show(items, e.originalEvent, contextMenu.close)
-
-	})
+    basicContext.show(items, e.originalEvent, contextMenu.close)
 
 }
 
-contextMenu.mergeAlbum = function(albumID, e) {
+contextMenu.albumMulti = function (albumIDs, e) {
 
-	api.post('Albums::get', {}, function(data) {
+    multiselect.stopResize()
 
-		let items = []
+    // Automatically merge selected albums when albumIDs contains more than one album
+    // Show list of albums otherwise
+    let autoMerge = (albumIDs.length > 1 ? true : false)
 
-		if (data.albums && data.num>1) {
+    // Show merge-item when there's more than one album
+    let showMerge = (albums.json && albums.json.albums && Object.keys(albums.json.albums).length > 1)
 
-			$.each(data.albums, function() {
+    let items = [
+        {title: build.iconic('pencil') + 'Rename All', fn: () => album.setTitle(albumIDs)},
+        {title: build.iconic('collapse-left') + 'Merge All', visible: showMerge && autoMerge, fn: () => album.merge(albumIDs)},
+        {
+            title: build.iconic('collapse-left') + 'Merge', visible: showMerge && !autoMerge, fn: () => {
+                basicContext.close();
+                contextMenu.mergeAlbum(albumIDs[0], e)
+            }
+        },
+        {title: build.iconic('trash') + 'Delete All', fn: () => album.delete(albumIDs)}
+    ]
 
-				if (!this.thumbs[0]) this.thumbs[0] = 'src/images/no_cover.svg'
-				if (this.title==='') this.title = 'Untitled'
+    items.push()
 
-				let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbs[0] }'><div class='title'>$${ this.title }</div>`
-
-				if (this.id!=albumID) items.push({
-					title: html,
-					fn: () => album.merge([ albumID, this.id ])
-				})
-
-			})
-
-		}
-
-		if (items.length===0) return false
-
-		basicContext.show(items, e.originalEvent, contextMenu.close)
-
-	})
+    basicContext.show(items, e.originalEvent, contextMenu.close)
 
 }
 
-contextMenu.photo = function(photoID, e) {
+contextMenu.albumTitle = function (albumID, e) {
 
-	// Notice for 'Move':
-	// fn must call basicContext.close() first,
-	// in order to keep the selection
+    api.post('Albums::get', {}, function (data) {
 
-	let items = [
-		{ title: build.iconic('star') + 'Star', fn: () => photo.setStar([ photoID ]) },
-		{ title: build.iconic('tag') + 'Tags', fn: () => photo.editTags([ photoID ]) },
-		{ },
-		{ title: build.iconic('pencil') + 'Rename', fn: () => photo.setTitle([ photoID ]) },
-		{ title: build.iconic('layers') + 'Duplicate', fn: () => photo.duplicate([ photoID ]) },
-		{ title: build.iconic('folder') + 'Move', fn: () => { basicContext.close(); contextMenu.move([ photoID ], e) } },
-		{ title: build.iconic('trash') + 'Delete', fn: () => photo.delete([ photoID ]) }
-	]
+        let items = []
 
-	$('.photo[data-id="' + photoID + '"]').addClass('active')
+        if (data.albums && data.num > 1) {
 
-	basicContext.show(items, e.originalEvent, contextMenu.close)
+            // Generate list of albums
+            $.each(data.albums, function () {
 
-}
+                if (!this.thumbs[0]) this.thumbs[0] = 'src/images/no_cover.svg'
+                if (this.title === '') this.title = 'Untitled'
 
-contextMenu.photoMulti = function(photoIDs, e) {
+                let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbs[0] }'><div class='title'>$${ this.title }</div>`
 
-	// Notice for 'Move All':
-	// fn must call basicContext.close() first,
-	// in order to keep the selection and multiselect
+                if (this.id != albumID) items.push({
+                    title: html,
+                    fn: () => lychee.goto(this.id)
+                })
 
-	multiselect.stopResize()
+            })
 
-	let items = [
-		{ title: build.iconic('star') + 'Star All', fn: () => photo.setStar(photoIDs) },
-		{ title: build.iconic('tag') + 'Tag All', fn: () => photo.editTags(photoIDs) },
-		{ },
-		{ title: build.iconic('pencil') + 'Rename All', fn: () => photo.setTitle(photoIDs) },
-		{ title: build.iconic('layers') + 'Duplicate All', fn: () => photo.duplicate(photoIDs) },
-		{ title: build.iconic('folder') + 'Move All', fn: () => { basicContext.close(); contextMenu.move(photoIDs, e) } },
-		{ title: build.iconic('trash') + 'Delete All', fn: () => photo.delete(photoIDs) }
-	]
+            items.unshift({})
 
-	basicContext.show(items, e.originalEvent, contextMenu.close)
+        }
+
+        items.unshift({title: build.iconic('pencil') + 'Rename', fn: () => album.setTitle([albumID])})
+
+        basicContext.show(items, e.originalEvent, contextMenu.close)
+
+    })
 
 }
 
-contextMenu.photoTitle = function(albumID, photoID, e) {
+contextMenu.mergeAlbum = function (albumID, e) {
 
-	let items = [
-		{ title: build.iconic('pencil') + 'Rename', fn: () => photo.setTitle([ photoID ]) }
-	]
+    api.post('Albums::get', {}, function (data) {
 
-	let data = album.json
+        let items = []
 
-	if (data.content!==false && data.num>1) {
+        if (data.albums && data.num > 1) {
 
-		items.push({ })
+            $.each(data.albums, function () {
 
-		// Generate list of albums
-		$.each(data.content, function(index) {
+                if (!this.thumbs[0]) this.thumbs[0] = 'src/images/no_cover.svg'
+                if (this.title === '') this.title = 'Untitled'
 
-			if (this.title==='') this.title = 'Untitled'
+                let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbs[0] }'><div class='title'>$${ this.title }</div>`
 
-			let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbUrl }'><div class='title'>$${ this.title }</div>`
+                if (this.id != albumID) items.push({
+                    title: html,
+                    fn: () => album.merge([albumID, this.id])
+                })
 
-			if (this.id!=photoID) items.push({
-				title: html,
-				fn: () => lychee.goto(albumID + '/' + this.id)
-			})
+            })
 
-		})
+        }
 
-	}
+        if (items.length === 0) return false
 
-	basicContext.show(items, e.originalEvent, contextMenu.close)
+        basicContext.show(items, e.originalEvent, contextMenu.close)
 
-}
-
-contextMenu.photoMore = function(photoID, e) {
-
-	// Show download-item when
-	// a) Public mode is off
-	// b) Downloadable is 1 and public mode is on
-	let showDownload = lychee.publicMode===false || ((album.json && album.json.downloadable && album.json.downloadable==='1') && lychee.publicMode===true)
-
-	let items = [
-		{ title: build.iconic('fullscreen-enter') + 'Full Photo', fn: () => window.open(photo.getDirectLink()) },
-		{ title: build.iconic('cloud-download') + 'Download', visible: showDownload, fn: () => photo.getArchive(photoID) }
-	]
-
-	basicContext.show(items, e.originalEvent)
+    })
 
 }
 
-contextMenu.move = function(photoIDs, e) {
+contextMenu.photo = function (photoID, e) {
 
-	let items = []
+    // Notice for 'Move':
+    // fn must call basicContext.close() first,
+    // in order to keep the selection
 
-	api.post('Albums::get', {}, function(data) {
+    let items = [
+        {title: build.iconic('star') + 'Star', fn: () => photo.setStar([photoID])},
+        {title: build.iconic('tag') + 'Tags', fn: () => photo.editTags([photoID])},
+        {},
+        {title: build.iconic('pencil') + 'Rename', fn: () => photo.setTitle([photoID])},
+        {title: build.iconic('layers') + 'Duplicate', fn: () => photo.duplicate([photoID])},
+        {
+            title: build.iconic('folder') + 'Move', fn: () => {
+                basicContext.close();
+                contextMenu.move([photoID], e)
+            }
+        },
+        {title: build.iconic('trash') + 'Delete', fn: () => photo.delete([photoID])}
+    ]
 
-		if (data.num===0) {
+    $('.photo[data-id="' + photoID + '"]').addClass('active')
 
-			// Show only 'Add album' when no album available
-			items = [
-				{ title: 'New Album', fn: album.add }
-			]
-
-		} else {
-
-			// Generate list of albums
-			$.each(data.albums, function() {
-
-				if (!this.thumbs[0]) this.thumbs[0] = 'src/images/no_cover.svg'
-				if (this.title==='') this.title = 'Untitled'
-
-				let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbs[0] }'><div class='title'>$${ this.title }</div>`
-
-				if (this.id!=album.getID()) items.push({
-					title: html,
-					fn: () => photo.setAlbum(photoIDs, this.id)
-				})
-
-			})
-
-			// Show Unsorted when unsorted is not the current album
-			if (album.getID()!=='0') {
-
-				items.unshift({ })
-				items.unshift({ title: 'Unsorted', fn: () => photo.setAlbum(photoIDs, 0) })
-
-			}
-
-		}
-
-		basicContext.show(items, e.originalEvent, contextMenu.close)
-
-	})
+    basicContext.show(items, e.originalEvent, contextMenu.close)
 
 }
 
-contextMenu.sharePhoto = function(photoID, e) {
+contextMenu.photoMulti = function (photoIDs, e) {
 
-	let link      = photo.getViewLink(photoID)
-	let iconClass = 'ionicons'
+    // Notice for 'Move All':
+    // fn must call basicContext.close() first,
+    // in order to keep the selection and multiselect
 
-	let items = [
-		{ title: `<input readonly id="link" value="${ link }">`, fn: () => {}, class: 'basicContext__item--noHover' },
-		{ },
-		{ title: build.iconic('twitter', iconClass) + 'Twitter', fn: () => photo.share(photoID, 'twitter') },
-		{ title: build.iconic('facebook', iconClass) + 'Facebook', fn: () => photo.share(photoID, 'facebook') },
-		{ title: build.iconic('envelope-closed') + 'Mail', fn: () => photo.share(photoID, 'mail') },
-		{ title: build.iconic('dropbox', iconClass) + 'Dropbox', visible: lychee.publicMode===false, fn: () => photo.share(photoID, 'dropbox') },
-		{ title: build.iconic('link-intact') + 'Direct Link', fn: () => window.open(photo.getDirectLink()) },
-		{ },
-		{ title: build.iconic('ban') + 'Make Private', visible: lychee.publicMode===false, fn: () => photo.setPublic(photoID) }
-	]
+    multiselect.stopResize()
 
-	if (lychee.publicMode===true) items.splice(7, 1)
+    let items = [
+        {title: build.iconic('star') + 'Star All', fn: () => photo.setStar(photoIDs)},
+        {title: build.iconic('tag') + 'Tag All', fn: () => photo.editTags(photoIDs)},
+        {},
+        {title: build.iconic('pencil') + 'Rename All', fn: () => photo.setTitle(photoIDs)},
+        {title: build.iconic('layers') + 'Duplicate All', fn: () => photo.duplicate(photoIDs)},
+        {
+            title: build.iconic('folder') + 'Move All', fn: () => {
+                basicContext.close();
+                contextMenu.move(photoIDs, e)
+            }
+        },
+        {title: build.iconic('trash') + 'Delete All', fn: () => photo.delete(photoIDs)}
+    ]
 
-	basicContext.show(items, e.originalEvent)
-	$('.basicContext input#link').focus().select()
-
-}
-
-contextMenu.shareAlbum = function(albumID, e) {
-
-	let iconClass = 'ionicons'
-
-	let items = [
-		{ title: `<input readonly id="link" value="${ location.href }">`, fn: () => {}, class: 'basicContext__item--noHover' },
-		{ },
-		{ title: build.iconic('twitter', iconClass) + 'Twitter', fn: () => album.share('twitter') },
-		{ title: build.iconic('facebook', iconClass) + 'Facebook', fn: () => album.share('facebook') },
-		{ title: build.iconic('envelope-closed') + 'Mail', fn: () => album.share('mail') },
-		{ },
-		{ title: build.iconic('pencil') + 'Edit Sharing', visible: lychee.publicMode===false, fn: () => album.setPublic(albumID, true, e) },
-		{ title: build.iconic('ban') + 'Make Private', visible: lychee.publicMode===false, fn: () => album.setPublic(albumID, false) }
-	]
-
-	if (lychee.publicMode===true) items.splice(5, 1)
-
-	basicContext.show(items, e.originalEvent)
-	$('.basicContext input#link').focus().select()
+    basicContext.show(items, e.originalEvent, contextMenu.close)
 
 }
 
-contextMenu.close = function() {
+contextMenu.photoTitle = function (albumID, photoID, e) {
 
-	if (!visible.contextMenu()) return false
+    let items = [
+        {title: build.iconic('pencil') + 'Rename', fn: () => photo.setTitle([photoID])}
+    ]
 
-	basicContext.close()
+    let data = album.json
 
-	$('.photo.active, .album.active').removeClass('active')
-	if (visible.multiselect()) multiselect.close()
+    if (data.content !== false && data.num > 1) {
+
+        items.push({})
+
+        // Generate list of albums
+        $.each(data.content, function (index) {
+
+            if (this.title === '') this.title = 'Untitled'
+
+            let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbUrl }'><div class='title'>$${ this.title }</div>`
+
+            if (this.id != photoID) items.push({
+                title: html,
+                fn: () => lychee.goto(albumID + '/' + this.id)
+            })
+
+        })
+
+    }
+
+    basicContext.show(items, e.originalEvent, contextMenu.close)
+
+}
+
+contextMenu.photoMore = function (photoID, e) {
+
+    // Show download-item when
+    // a) Public mode is off
+    // b) Downloadable is 1 and public mode is on
+    let showDownload = lychee.publicMode === false || ((album.json && album.json.downloadable && album.json.downloadable === '1') && lychee.publicMode === true)
+
+    let items = [
+        {title: build.iconic('fullscreen-enter') + 'Full Photo', fn: () => window.open(photo.getDirectLink())},
+        {title: build.iconic('cloud-download') + 'Download', visible: showDownload, fn: () => photo.getArchive(photoID)}
+    ]
+
+    basicContext.show(items, e.originalEvent)
+
+}
+
+contextMenu.move = function (photoIDs, e) {
+
+    let items = []
+
+    api.post('Albums::get', {}, function (data) {
+
+        if (data.num === 0) {
+
+            // Show only 'Add album' when no album available
+            items = [
+                {title: 'New Album', fn: album.add}
+            ]
+
+        } else {
+
+            // Generate list of albums
+            $.each(data.albums, function () {
+
+                if (!this.thumbs[0]) this.thumbs[0] = 'src/images/no_cover.svg'
+                if (this.title === '') this.title = 'Untitled'
+
+                let html = lychee.html`<img class='cover' width='16' height='16' src='$${ this.thumbs[0] }'><div class='title'>$${ this.title }</div>`
+
+                if (this.id != album.getID()) items.push({
+                    title: html,
+                    fn: () => photo.setAlbum(photoIDs, this.id)
+                })
+
+            })
+
+            // Show Unsorted when unsorted is not the current album
+            if (album.getID() !== '0') {
+
+                items.unshift({})
+                items.unshift({title: 'Unsorted', fn: () => photo.setAlbum(photoIDs, 0)})
+
+            }
+
+        }
+
+        basicContext.show(items, e.originalEvent, contextMenu.close)
+
+    })
+
+}
+
+contextMenu.sharePhoto = function (photoID, e) {
+
+    let link = photo.getViewLink(photoID)
+    let iconClass = 'ionicons'
+
+    let items = [
+        {
+            title: `<input readonly id="link" value="${ link }">`, fn: () => {
+            }, class: 'basicContext__item--noHover'
+        },
+        {},
+        {title: build.iconic('twitter', iconClass) + 'Twitter', fn: () => photo.share(photoID, 'twitter')},
+        {title: build.iconic('facebook', iconClass) + 'Facebook', fn: () => photo.share(photoID, 'facebook')},
+        {title: build.iconic('envelope-closed') + 'Mail', fn: () => photo.share(photoID, 'mail')},
+        {title: build.iconic('dropbox', iconClass) + 'Dropbox', visible: lychee.publicMode === false, fn: () => photo.share(photoID, 'dropbox')},
+        {title: build.iconic('link-intact') + 'Direct Link', fn: () => window.open(photo.getDirectLink())},
+        {},
+        {title: build.iconic('ban') + 'Make Private', visible: lychee.publicMode === false, fn: () => photo.setPublic(photoID)}
+    ]
+
+    if (lychee.publicMode === true) items.splice(7, 1)
+
+    basicContext.show(items, e.originalEvent)
+    $('.basicContext input#link').focus().select()
+
+}
+
+contextMenu.shareAlbum = function (albumID, e) {
+
+    let iconClass = 'ionicons'
+
+    let items = [
+        {
+            title: `<input readonly id="link" value="${ location.href }">`, fn: () => {
+            }, class: 'basicContext__item--noHover'
+        },
+        {},
+        {title: build.iconic('twitter', iconClass) + 'Twitter', fn: () => album.share('twitter')},
+        {title: build.iconic('facebook', iconClass) + 'Facebook', fn: () => album.share('facebook')},
+        {title: build.iconic('envelope-closed') + 'Mail', fn: () => album.share('mail')},
+        {},
+        {title: build.iconic('pencil') + 'Edit Sharing', visible: lychee.publicMode === false, fn: () => album.setPublic(albumID, true, e)},
+        {title: build.iconic('ban') + 'Make Private', visible: lychee.publicMode === false, fn: () => album.setPublic(albumID, false)}
+    ]
+
+    if (lychee.publicMode === true) items.splice(5, 1)
+
+    basicContext.show(items, e.originalEvent)
+    $('.basicContext input#link').focus().select()
+
+}
+
+contextMenu.close = function () {
+
+    if (!visible.contextMenu()) return false
+
+    basicContext.close()
+
+    $('.photo.active, .album.active').removeClass('active')
+    if (visible.multiselect()) multiselect.close()
 
 }
