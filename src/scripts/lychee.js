@@ -4,9 +4,9 @@
 
 lychee = {
 
-    title: document.title,
-    version: '3.1.8',
-    versionCode: '030108',
+	title           : document.title,
+	version         : '3.2.0',
+	versionCode     : '030200',
 
     updateURL: 'https://github.com/siku2/Lychee',
 
@@ -167,6 +167,7 @@ lychee.load = function () {
 
         // Trash data
         photo.json = null
+		albums.json = null
 
         // Show Photo
         if (lychee.content.html() === '' || (header.dom('.header__search').length && header.dom('.header__search').val().length !== 0)) {
@@ -179,12 +180,13 @@ lychee.load = function () {
 
         // Trash data
         photo.json = null
+		albums.json = null
 
-        // Show Album
-        if (visible.photo()) view.photo.hide()
-        if (visible.sidebar() && (albumID === '0' || albumID === 'f' || albumID === 's' || albumID === 'r')) sidebar.toggle()
-        if (album.json && albumID == album.json.id) view.album.title()
-        else album.load(albumID)
+		// Show Album
+		if (visible.photo()) view.photo.hide()
+		if (visible.sidebar() && album.isSmartID( albumID)) sidebar.toggle()
+		if (album.json && albumID==album.json.id) view.album.title()
+		else album.load(albumID)
 
     } else {
 
@@ -194,9 +196,9 @@ lychee.load = function () {
             search.hash = null
         }
 
-        // Trash data
-        album.json = null
-        photo.json = null
+		// Trash data
+		album.subjson = nullalbum.json = null
+		photo.json = null
 
         // Hide sidebar
         if (visible.sidebar()) sidebar.toggle()

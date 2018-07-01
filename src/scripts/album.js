@@ -2,9 +2,36 @@
  * @description Takes care of every action an album can handle and execute.
  */
 
+const buildAlbumOptions = function(albums, select, parent = 0, layer = 0) {
+
+	var cmbxOptions = ''
+
+	for (i in albums) {
+		if (albums[i].parent==parent) {
+
+			let title = (layer>0 ? '&nbsp;&nbsp;'.repeat(layer - 1) + '└ ' : '') + albums[i].title
+			let selected = select==albums[i].id ? ' selected="selected"' : ''
+
+			cmbxOptions += `<option${ selected } value='${ albums[i].id }'>${ title }</option>`
+			cmbxOptions += buildAlbumOptions(albums, select, albums[i].id, layer + 1)
+
+		}
+	}
+
+	return cmbxOptions
+
+}
+
 album = {
 
-	json: null
+	json: null,
+	subjson: null
+
+}
+
+album.isSmartID = function(id) {
+
+	return (id==='0' || id==='f' || id==='s' || id==='r')
 
 }
 
@@ -13,19 +40,30 @@ album.getID = function() {
 	let id = null
 
 	let isID = (id) => {
-		if (id==='0' || id==='f' || id==='s' || id==='r') return true
+		if (album.isSmartID(id)===true) return true
 		return $.isNumeric(id)
 	}
-
-	if (photo.json)      id = photo.json.album
-	else if (album.json) id = album.json.id
 
 	// Search
 	if (isID(id)===false) id = $('.album:hover, .album.active').attr('data-id')
 	if (isID(id)===false) id = $('.photo:hover, .photo.active').attr('data-album-id')
 
+	if (isID(id)===false) {
+		if (photo.json)      id = photo.json.album
+		else if (album.json) id = album.json.id
+	}
+
 	if (isID(id)===true) return id
-	else                 return false
+
+	return false
+
+}
+
+album.getParent = function() {
+
+	if (album.json==null || album.isSmartID(album.json.id)===true || album.json.parent==0) return ''
+
+	return album.json.parent
 
 }
 
@@ -93,17 +131,45 @@ album.load = function(albumID, refresh = false) {
 
 			setTimeout(() => {
 
-				view.album.init()
+				let finish = function() {
+					view.album.init()
 
-				if (refresh===false) {
-					lychee.animate(lychee.content, 'contentZoomIn')
-					header.setMode('album')
+					if (refresh===false) {
+						lychee.animate(lychee.content, 'contentZoomIn')
+						header.setMode('album')
+					}
+				}
+
+				if (album.isSmartID(albumID)===false) {
+
+					params = {
+						parent: albumID
+					}
+
+					api.post('Albums::get', params, function(data) {
+
+						let waitTime = 0
+
+						album.subjson = data
+
+						// Calculate delay
+						let durationTime = (new Date().getTime() - startTime)
+						if (durationTime>300) waitTime = 0
+						else                  waitTime = 300 - durationTime
+
+						setTimeout(finish, waitTime)
+
+					})
+
+				} else {
+
+					finish()
+
 				}
 
 			}, waitTime)
 
 		})
-
 	})
 
 }
@@ -114,18 +180,20 @@ album.parse = function() {
 
 }
 
-album.add = function() {
+album.add = function(albumID = 0) {
 
 	const action = function(data) {
 
 		let title = data.title
+		let parent = albumID
 
 		const isNumber = (n) => (!isNaN(parseFloat(n)) && isFinite(n))
 
 		basicModal.close()
 
 		let params = {
-			title
+			title,
+			parent
 		}
 
 		api.post('Album::add', params, function(data) {
@@ -141,18 +209,26 @@ album.add = function() {
 
 	}
 
-	basicModal.show({
-		body: `<p>Enter a title for the new album: <input class='text' name='title' type='text' maxlength='50' placeholder='Title' value='Untitled'></p>`,
-		buttons: {
-			action: {
-				title: 'Create Album',
-				fn: action
-			},
-			cancel: {
-				title: 'Cancel',
-				fn: basicModal.close
+	api.post('Albums::get', { parent: -1 }, function(data) {
+
+		let msg = `
+		          <p>Enter a title for the new album: <input class='text' name='title' type='text' maxlength='50' placeholder='Title' value='Untitled'></p>
+		          `
+
+		basicModal.show({
+			body: msg,
+			buttons: {
+				action: {
+					title: 'Create Album',
+					fn: action
+				},
+				cancel: {
+					title: 'Cancel',
+					fn: basicModal.close
+				}
 			}
-		}
+		})
+
 	})
 
 }
@@ -184,6 +260,21 @@ album.delete = function(albumIDs) {
 					albums.deleteByID(id)
 				})
 
+			} else if (visible.album()) {
+
+				// if we deleted the current album, go to its parent
+				if (albumIDs.length==1 && album.json.id==albumIDs[0]) {
+
+					let id = album.getParent()
+					album.refresh()
+					lychee.goto(id)
+
+				}
+				// otherwise, we deleted a subalbum
+				else {
+					album.reload()
+				}
+
 			} else {
 
 				albums.refresh()
@@ -212,20 +303,20 @@ album.delete = function(albumIDs) {
 		cancel.title = 'Keep Album'
 
 		// Get title
-		if (album.json)       albumTitle = album.json.title
-		else if (albums.json) albumTitle = albums.getByID(albumIDs).title
+		if (album.json && album.json.id == albumIDs[0]) albumTitle = album.json.title
+		else if (albums.json || album.subjson)          albumTitle = albums.getByID(albumIDs).title
 
 		// Fallback for album without a title
 		if (albumTitle==='') albumTitle = 'Untitled'
 
-		msg = lychee.html`<p>Are you sure you want to delete the album '$${ albumTitle }' and all of the photos it contains? This action can't be undone!</p>`
+		msg = lychee.html`<p>Are you sure you want to delete the album '$${ albumTitle }' and all of the photos and subalbums it contains? This action can't be undone!</p>`
 
 	} else {
 
 		action.title = 'Delete Albums and Photos'
 		cancel.title = 'Keep Albums'
 
-		msg = lychee.html`<p>Are you sure you want to delete all $${ albumIDs.length } selected albums and all of the photos they contain? This action can't be undone!</p>`
+		msg = lychee.html`<p>Are you sure you want to delete all $${ albumIDs.length } selected albums and all of the photos and subalbums they contain? This action can't be undone!</p>`
 
 	}
 
@@ -257,8 +348,8 @@ album.setTitle = function(albumIDs) {
 	if (albumIDs.length===1) {
 
 		// Get old title if only one album is selected
-		if (album.json)       oldTitle = album.json.title
-		else if (albums.json) oldTitle = albums.getByID(albumIDs).title
+		if (album.json && album.json.id == albumIDs[0]) oldTitle = album.json.title
+		else if (albums.json || album.subjson)          oldTitle = albums.getByID(albumIDs).title
 
 	}
 
@@ -272,10 +363,20 @@ album.setTitle = function(albumIDs) {
 
 			// Rename only one album
 
-			album.json.title = newTitle
-			view.album.title()
+			if (album.json.id == albumIDs[0]) {
+				album.json.title = newTitle
+				view.album.title()
+			}
 
-			if (albums.json) albums.getByID(albumIDs[0]).title = newTitle
+			if (albums.json || album.subjson) {
+				albumIDs.forEach(function(id) {
+					let a = albums.getByID(id)
+					if (a) {
+						a.title = newTitle
+						view.album.content.title(id)
+					}
+				})
+			}
 
 		} else if (visible.albums()) {
 
@@ -553,7 +654,7 @@ album.getArchive = function(albumID) {
 
 }
 
-album.merge = function(albumIDs) {
+const getMessage = function(albumIDs, titles, operation) {
 
 	let title  = ''
 	let sTitle = ''
@@ -563,7 +664,8 @@ album.merge = function(albumIDs) {
 	if (albumIDs instanceof Array===false) albumIDs = [ albumIDs ]
 
 	// Get title of first album
-	if (albums.json) title = albums.getByID(albumIDs[0]).title
+	if (titles.length > 0)                 title = titles[0]
+	else if (albums.json || album.subjson) title = albums.getByID(albumIDs[0]).title
 
 	// Fallback for first album without a title
 	if (title==='') title = 'Untitled'
@@ -571,18 +673,25 @@ album.merge = function(albumIDs) {
 	if (albumIDs.length===2) {
 
 		// Get title of second album
-		if (albums.json) sTitle = albums.getByID(albumIDs[1]).title
+		if (titles.length > 1)                 sTitle = titles[1]
+		else if (albums.json || album.subjson) sTitle = albums.getByID(albumIDs[1]).title
 
 		// Fallback for second album without a title
 		if (sTitle==='') sTitle = 'Untitled'
 
-		msg = lychee.html`<p>Are you sure you want to merge the album '$${ sTitle }' into the album '$${ title }'?</p>`
+		msg = lychee.html`<p>Are you sure you want to ${ operation } the album '$${ sTitle }' into '$${ title }'?</p>`
 
 	} else {
 
-		msg = lychee.html`<p>Are you sure you want to merge all selected albums into the album '$${ title }'?</p>`
+		msg = lychee.html`<p>Are you sure you want to ${ operation } all selected albums into '$${ title }'?</p>`
 
 	}
+
+	return msg
+
+}
+
+album.merge = function(albumIDs, titles = []) {
 
 	const action = function() {
 
@@ -594,19 +703,15 @@ album.merge = function(albumIDs) {
 
 		api.post('Album::merge', params, function(data) {
 
-			if (data!==true) {
-				lychee.error(null, params, data)
-			} else {
-				albums.refresh()
-				lychee.goto()
-			}
+			if (data!==true) lychee.error(null, params, data)
+			else             album.reload()
 
 		})
 
 	}
 
 	basicModal.show({
-		body: msg,
+		body: getMessage(albumIDs, titles, 'merge'),
 		buttons: {
 			action: {
 				title: 'Merge Albums',
@@ -619,5 +724,60 @@ album.merge = function(albumIDs) {
 			}
 		}
 	})
+
+}
+
+album.move = function(albumIDs, titles = []) {
+
+	const action = function() {
+
+		basicModal.close()
+
+		let params = {
+			albumIDs: albumIDs.join()
+		}
+
+		api.post('Album::move', params, function(data) {
+
+			if (data!==true) lychee.error(null, params, data)
+			else             album.reload()
+
+		})
+
+	}
+
+	basicModal.show({
+		body: getMessage(albumIDs, titles, 'move'),
+		buttons: {
+			action: {
+				title: 'Move Albums',
+				fn: action,
+				class: 'red'
+			},
+			cancel: {
+				title: "Don't Move",
+				fn: basicModal.close
+			}
+		}
+	})
+
+}
+
+album.reload = function() {
+
+	let albumID = album.getID()
+
+	album.refresh()
+	albums.refresh()
+
+	if (visible.album()) lychee.goto(albumID)
+	else                 lychee.goto()
+
+}
+
+album.refresh = function() {
+
+	album.json = null
+	album.subjson = null
 
 }
