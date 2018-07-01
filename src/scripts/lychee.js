@@ -185,7 +185,7 @@ lychee.load = function () {
         // Show Album
         if (visible.photo()) view.photo.hide();
         if (visible.sidebar() && album.isSmartID(albumID)) sidebar.toggle();
-        if (album.json && albumID == album.json.id) view.album.title();
+        if (album.json && albumID === album.json.id) view.album.title();
         else album.load(albumID)
 
     } else {
@@ -197,7 +197,8 @@ lychee.load = function () {
         }
 
         // Trash data
-        album.subjson = nullalbum.json = null;
+        album.subjson = null;
+        album.json = null;
         photo.json = null;
 
         // Hide sidebar

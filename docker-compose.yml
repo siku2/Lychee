@@ -30,6 +30,15 @@ services:
       - MYSQL_USER=lychee
       - MYSQL_PASSWORD=lychee
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
+  adminer:
+    container_name: Adminer
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - backend
+
 
 volumes:
   pictures: {}

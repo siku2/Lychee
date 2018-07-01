@@ -16,6 +16,7 @@ RUN \
 	php7-mysqli \
 	php7-mysqlnd \
 	php7-zip \
+	php7-gettext \
 	re2c
 
 # add files
