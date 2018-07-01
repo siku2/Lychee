@@ -2,13 +2,13 @@
  * @description Responsible to reflect data changes to the UI.
  */
 
-view = {}
+view = {};
 
 view.albums = {
 
 	init: function() {
 
-		view.albums.title()
+		view.albums.title();
 		view.albums.content.init()
 
 	},
@@ -25,16 +25,16 @@ view.albums = {
 
 		init: function() {
 
-			let smartData  = ''
-			let albumsData = ''
+			let smartData  = '';
+			let albumsData = '';
 
 			// Smart Albums
 			if (lychee.publicMode===false) {
 
-				albums.parse(albums.json.smartalbums.unsorted)
-				albums.parse(albums.json.smartalbums.public)
-				albums.parse(albums.json.smartalbums.starred)
-				albums.parse(albums.json.smartalbums.recent)
+				albums.parse(albums.json.smartalbums.unsorted);
+				albums.parse(albums.json.smartalbums.public);
+				albums.parse(albums.json.smartalbums.starred);
+				albums.parse(albums.json.smartalbums.recent);
 
 				smartData = build.divider('Smart Albums') + build.album(albums.json.smartalbums.unsorted) + build.album(albums.json.smartalbums.public) + build.album(albums.json.smartalbums.starred) + build.album(albums.json.smartalbums.recent)
 
@@ -44,9 +44,9 @@ view.albums = {
 			if (albums.json.albums && albums.json.num!==0) {
 
 				$.each(albums.json.albums, function() {
-					albums.parse(this)
+					albums.parse(this);
 					albumsData += build.album(this)
-				})
+				});
 
 				// Add divider
 				if (lychee.publicMode===false) albumsData = build.divider('Albums') + albumsData
@@ -54,7 +54,7 @@ view.albums = {
 			}
 
 			if (smartData==='' && albumsData==='') {
-				lychee.content.html('')
+				lychee.content.html('');
 				$('body').append(build.no_content('eye'))
 			} else {
 				lychee.content.html(smartData + albumsData)
@@ -69,9 +69,9 @@ view.albums = {
 
 		title: function(albumID) {
 
-			let title = albums.getByID(albumID).title
+			let title = albums.getByID(albumID).title;
 
-			title = lychee.escapeHTML(title)
+			title = lychee.escapeHTML(title);
 
 			$('.album[data-id="' + albumID + '"] .overlay h1')
 				.html(title)
@@ -85,7 +85,7 @@ view.albums = {
 				width      : 0,
 				marginLeft : 0
 			}, 300, function() {
-				$(this).remove()
+				$(this).remove();
 				if (albums.json.num<=0) lychee.content.find('.divider:last-child').remove()
 			})
 
@@ -93,18 +93,18 @@ view.albums = {
 
 	}
 
-}
+};
 
 view.album = {
 
 	init: function() {
 
-		album.parse()
+		album.parse();
 
-		view.album.sidebar()
-		view.album.title()
-		view.album.public()
-		view.album.content.init()
+		view.album.sidebar();
+		view.album.title();
+		view.album.public();
+		view.album.content.init();
 
 		album.json.init = 1
 
@@ -116,20 +116,20 @@ view.album = {
 
 			switch (album.getID()) {
 				case 'f':
-					lychee.setTitle('Starred', false)
-					break
+					lychee.setTitle('Starred', false);
+					break;
 				case 's':
-					lychee.setTitle('Public', false)
-					break
+					lychee.setTitle('Public', false);
+					break;
 				case 'r':
-					lychee.setTitle('Recent', false)
-					break
+					lychee.setTitle('Recent', false);
+					break;
 				case '0':
-					lychee.setTitle('Unsorted', false)
-					break
+					lychee.setTitle('Unsorted', false);
+					break;
 				default:
-					if (album.json.init) sidebar.changeAttr('title', album.json.title)
-					lychee.setTitle(album.json.title, true)
+					if (album.json.init) sidebar.changeAttr('title', album.json.title);
+					lychee.setTitle(album.json.title, true);
 					break
 			}
 
@@ -141,15 +141,15 @@ view.album = {
 
 		init: function() {
 
-			let photosData = ''
+			let photosData = '';
 
 			// Sub albums
 			if (album.subjson && album.subjson.albums && album.subjson.num!==0) {
 
-				photosData = build.divider('Albums')
+				photosData = build.divider('Albums');
 
 				$.each(album.subjson.albums, function() {
-					albums.parse(this)
+					albums.parse(this);
 					photosData += build.album(this)
 				})
 
@@ -157,7 +157,7 @@ view.album = {
 
 			if (album.json.content && album.json.content!==false) {
 
-				photosData += build.divider('Photos', 'divider-photos')
+				photosData += build.divider('Photos', 'divider-photos');
 
 				// Build photos
 				$.each(album.json.content, function() {
@@ -167,8 +167,8 @@ view.album = {
 			}
 
 			// Save and reset scroll position
-			view.albums.content.scrollPosition = $(document).scrollTop()
-			requestAnimationFrame(() => $(document).scrollTop(0))
+			view.albums.content.scrollPosition = $(document).scrollTop();
+			requestAnimationFrame(() => $(document).scrollTop(0));
 
 			// Add photos to view
 			lychee.content.html(photosData)
@@ -177,28 +177,28 @@ view.album = {
 
 		title: function(photoID) {
 
-			let ntitle = ''
-			let prefix = ''
+			let ntitle = '';
+			let prefix = '';
 
 			if (album.json.content[photoID]) {
 
-				prefix = '.photo'
+				prefix = '.photo';
 				ntitle = album.json.content[photoID].title
 
 			} else {
 
-				prefix = '.album'
+				prefix = '.album';
 
 				for (i in album.subjson.albums) {
 					if (album.subjson.albums[i].id==photoID) {
-						ntitle = album.subjson.albums[i].title
+						ntitle = album.subjson.albums[i].title;
 						break
 					}
 				}
 
 			}
 
-			ntitle = lychee.escapeHTML(ntitle)
+			ntitle = lychee.escapeHTML(ntitle);
 
 			$(prefix + '[data-id="' + photoID + '"] .overlay h1')
 				.html(ntitle)
@@ -208,18 +208,18 @@ view.album = {
 
 		star: function(photoID) {
 
-			let $badge = $('.photo[data-id="' + photoID + '"] .icn-star')
+			let $badge = $('.photo[data-id="' + photoID + '"] .icn-star');
 
-			if (album.json.content[photoID].star==='1') $badge.addClass('badge--visible')
+			if (album.json.content[photoID].star==='1') $badge.addClass('badge--visible');
 			else                                        $badge.removeClass('badge--visible')
 
 		},
 
 		public: function(photoID) {
 
-			let $badge = $('.photo[data-id="' + photoID + '"] .icn-share')
+			let $badge = $('.photo[data-id="' + photoID + '"] .icn-share');
 
-			if (album.json.content[photoID].public==='1') $badge.addClass('badge--visible')
+			if (album.json.content[photoID].public==='1') $badge.addClass('badge--visible');
 			else                                          $badge.removeClass('badge--visible')
 
 		},
@@ -230,11 +230,11 @@ view.album = {
 				width      : 0,
 				marginLeft : 0
 			}, 300, function() {
-				$(this).remove()
+				$(this).remove();
 				// Only when search is not active
 				if (!visible.albums()) {
-					album.json.num--
-					view.album.num()
+					album.json.num--;
+					view.album.num();
 					if (album.json.num == 0) $('#divider-photos').hide()
 				}
 			})
@@ -261,9 +261,9 @@ view.album = {
 
 			$('#button_share_album')
 				.addClass('active')
-				.attr('title', 'Share Album')
+				.attr('title', 'Share Album');
 
-			$('.photo .iconic-share').remove()
+			$('.photo .iconic-share').remove();
 
 			if (album.json.init) sidebar.changeAttr('public', 'Yes')
 
@@ -271,7 +271,7 @@ view.album = {
 
 			$('#button_share_album')
 				.removeClass('active')
-				.attr('title', 'Make Public')
+				.attr('title', 'Make Public');
 
 			if (album.json.init) sidebar.changeAttr('public', 'No')
 
@@ -281,21 +281,21 @@ view.album = {
 
 	hidden: function() {
 
-		if (album.json.visible==='1') sidebar.changeAttr('hidden', 'No')
+		if (album.json.visible==='1') sidebar.changeAttr('hidden', 'No');
 		else                          sidebar.changeAttr('hidden', 'Yes')
 
 	},
 
 	downloadable: function() {
 
-		if (album.json.downloadable==='1') sidebar.changeAttr('downloadable', 'Yes')
+		if (album.json.downloadable==='1') sidebar.changeAttr('downloadable', 'Yes');
 		else                               sidebar.changeAttr('downloadable', 'No')
 
 	},
 
 	password: function() {
 
-		if (album.json.password==='1') sidebar.changeAttr('password', 'Yes')
+		if (album.json.password==='1') sidebar.changeAttr('password', 'Yes');
 		else                           sidebar.changeAttr('password', 'No')
 
 	},
@@ -304,29 +304,29 @@ view.album = {
 
 		if ((visible.album() || !album.json.init) && !visible.photo()) {
 
-			let structure = sidebar.createStructure.album(album.json)
-			let html      = sidebar.render(structure)
+			let structure = sidebar.createStructure.album(album.json);
+			let html      = sidebar.render(structure);
 
-			sidebar.dom('.sidebar__wrapper').html(html)
+			sidebar.dom('.sidebar__wrapper').html(html);
 			sidebar.bind()
 
 		}
 
 	}
 
-}
+};
 
 view.photo = {
 
 	init: function() {
 
-		photo.parse()
+		photo.parse();
 
-		view.photo.sidebar()
-		view.photo.title()
-		view.photo.star()
-		view.photo.public()
-		view.photo.photo()
+		view.photo.sidebar();
+		view.photo.title();
+		view.photo.star();
+		view.photo.public();
+		view.photo.photo();
 
 		photo.json.init = 1
 
@@ -335,19 +335,19 @@ view.photo = {
 	show: function() {
 
 		// Change header
-		lychee.content.addClass('view')
-		header.setMode('photo')
+		lychee.content.addClass('view');
+		header.setMode('photo');
 
 		// Make body not scrollable
-		$('body').css('overflow', 'hidden')
+		$('body').css('overflow', 'hidden');
 
 		// Fullscreen
-		let timeout = null
+		let timeout = null;
 		$(document).bind('mousemove', function() {
-			clearTimeout(timeout)
-			header.show()
+			clearTimeout(timeout);
+			header.show();
 			timeout = setTimeout(header.hide, 2500)
-		})
+		});
 
 		lychee.animate(lychee.imageview, 'fadeIn')
 
@@ -355,21 +355,21 @@ view.photo = {
 
 	hide: function() {
 
-		header.show()
+		header.show();
 
-		lychee.content.removeClass('view')
-		header.setMode('album')
+		lychee.content.removeClass('view');
+		header.setMode('album');
 
 		// Make body scrollable
-		$('body').css('overflow', 'auto')
+		$('body').css('overflow', 'auto');
 
 		// Disable Fullscreen
-		$(document).unbind('mousemove')
+		$(document).unbind('mousemove');
 
 		// Hide Photo
-		lychee.animate(lychee.imageview, 'fadeOut')
+		lychee.animate(lychee.imageview, 'fadeOut');
 		setTimeout(() => {
-			lychee.imageview.hide()
+			lychee.imageview.hide();
 			view.album.sidebar()
 		}, 300)
 
@@ -377,7 +377,7 @@ view.photo = {
 
 	title: function() {
 
-		if (photo.json.init) sidebar.changeAttr('title', photo.json.title)
+		if (photo.json.init) sidebar.changeAttr('title', photo.json.title);
 		lychee.setTitle(photo.json.title, true)
 
 	},
@@ -400,7 +400,7 @@ view.photo = {
 		} else {
 
 			// Unstarred
-			$('#button_star').removeClass('active')
+			$('#button_star').removeClass('active');
 			$('#button_star').attr('title', 'Star Photo')
 
 		}
@@ -414,7 +414,7 @@ view.photo = {
 			// Photo public
 			$('#button_share')
 				.addClass('active')
-				.attr('title', 'Share Photo')
+				.attr('title', 'Share Photo');
 
 			if (photo.json.init) sidebar.changeAttr('public', 'Yes')
 
@@ -423,7 +423,7 @@ view.photo = {
 			// Photo private
 			$('#button_share')
 				.removeClass('active')
-				.attr('title', 'Make Public')
+				.attr('title', 'Make Public');
 
 			if (photo.json.init) sidebar.changeAttr('public', 'No')
 
@@ -433,20 +433,20 @@ view.photo = {
 
 	tags: function() {
 
-		sidebar.changeAttr('tags', build.tags(photo.json.tags), true)
+		sidebar.changeAttr('tags', build.tags(photo.json.tags), true);
 		sidebar.bind()
 
 	},
 
 	photo: function() {
 
-		lychee.imageview.html(build.imageview(photo.json, visible.header()))
+		lychee.imageview.html(build.imageview(photo.json, visible.header()));
 
-		let $nextArrow     = lychee.imageview.find('a#next')
-		let $previousArrow = lychee.imageview.find('a#previous')
-		let photoID        = photo.getID()
-		let hasNext        = album.json && album.json.content && album.json.content[photoID] && album.json.content[photoID].nextPhoto!=null && album.json.content[photoID].nextPhoto!==''
-		let hasPrevious    = album.json && album.json.content && album.json.content[photoID] && album.json.content[photoID].previousPhoto!=null && album.json.content[photoID].previousPhoto!==''
+		let $nextArrow     = lychee.imageview.find('a#next');
+		let $previousArrow = lychee.imageview.find('a#previous');
+		let photoID        = photo.getID();
+		let hasNext        = album.json && album.json.content && album.json.content[photoID] && album.json.content[photoID].nextPhoto!=null && album.json.content[photoID].nextPhoto!=='';
+		let hasPrevious    = album.json && album.json.content && album.json.content[photoID] && album.json.content[photoID].previousPhoto!=null && album.json.content[photoID].previousPhoto!=='';
 
 		if (hasNext===false || lychee.viewMode===true) {
 
@@ -454,8 +454,8 @@ view.photo = {
 
 		} else {
 
-			let nextPhotoID = album.json.content[photoID].nextPhoto
-			let nextPhoto   = album.json.content[nextPhotoID]
+			let nextPhotoID = album.json.content[photoID].nextPhoto;
+			let nextPhoto   = album.json.content[nextPhotoID];
 
 			$nextArrow.css('background-image', lychee.html`linear-gradient(to bottom, rgba(0, 0, 0, .4), rgba(0, 0, 0, .4)), url("$${ nextPhoto.thumbUrl }")`)
 
@@ -467,8 +467,8 @@ view.photo = {
 
 		} else {
 
-			let previousPhotoID = album.json.content[photoID].previousPhoto
-			let previousPhoto   = album.json.content[previousPhotoID]
+			let previousPhotoID = album.json.content[photoID].previousPhoto;
+			let previousPhoto   = album.json.content[previousPhotoID];
 
 			$previousArrow.css('background-image', lychee.html`linear-gradient(to bottom, rgba(0, 0, 0, .4), rgba(0, 0, 0, .4)), url("$${ previousPhoto.thumbUrl }")`)
 
@@ -478,12 +478,12 @@ view.photo = {
 
 	sidebar: function() {
 
-		let structure = sidebar.createStructure.photo(photo.json)
-		let html      = sidebar.render(structure)
+		let structure = sidebar.createStructure.photo(photo.json);
+		let html      = sidebar.render(structure);
 
-		sidebar.dom('.sidebar__wrapper').html(html)
+		sidebar.dom('.sidebar__wrapper').html(html);
 		sidebar.bind()
 
 	}
 
-}
+};

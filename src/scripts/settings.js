@@ -2,25 +2,25 @@
  * @description Lets you change settings.
  */
 
-settings = {}
+settings = {};
 
 settings.createConfig = function() {
 
 	const action = function(data) {
 
-		let dbName        = data.dbName        || ''
-		let dbUser        = data.dbUser        || ''
-		let dbPassword    = data.dbPassword    || ''
-		let dbHost        = data.dbHost        || ''
-		let dbTablePrefix = data.dbTablePrefix || ''
+		let dbName        = data.dbName        || '';
+		let dbUser        = data.dbUser        || '';
+		let dbPassword    = data.dbPassword    || '';
+		let dbHost        = data.dbHost        || '';
+		let dbTablePrefix = data.dbTablePrefix || '';
 
 		if (dbUser.length<1) {
-			basicModal.error('dbUser')
+			basicModal.error('dbUser');
 			return false
 		}
 
-		if (dbHost.length<1) dbHost = 'localhost'
-		if (dbName.length<1) dbName = 'lychee'
+		if (dbHost.length<1) dbHost = 'localhost';
+		if (dbName.length<1) dbName = 'lychee';
 
 		let params = {
 			dbName,
@@ -28,7 +28,7 @@ settings.createConfig = function() {
 			dbPassword,
 			dbHost,
 			dbTablePrefix
-		}
+		};
 
 		api.post('Config::create', params, function(data) {
 
@@ -45,7 +45,7 @@ settings.createConfig = function() {
 								fn: settings.createConfig
 							}
 						}
-					})
+					});
 
 					return false
 
@@ -62,7 +62,7 @@ settings.createConfig = function() {
 								fn: settings.createConfig
 							}
 						}
-					})
+					});
 
 					return false
 
@@ -79,7 +79,7 @@ settings.createConfig = function() {
 								fn: settings.createConfig
 							}
 						}
-					})
+					});
 
 					return false
 
@@ -94,7 +94,7 @@ settings.createConfig = function() {
 							fn: settings.createConfig
 						}
 					}
-				})
+				});
 
 				return false
 
@@ -107,7 +107,7 @@ settings.createConfig = function() {
 
 		})
 
-	}
+	};
 
 	let msg = `
 	          <p>
@@ -121,7 +121,7 @@ settings.createConfig = function() {
 	              <input name='dbName' class='text' type='text' placeholder='Database Name (optional)' value=''>
 	              <input name='dbTablePrefix' class='text' type='text' placeholder='Table prefix (optional)' value=''>
 	          </p>
-	          `
+	          `;
 
 	basicModal.show({
 		body: msg,
@@ -133,31 +133,31 @@ settings.createConfig = function() {
 		}
 	})
 
-}
+};
 
 settings.createLogin = function() {
 
 	const action = function(data) {
 
-		let username = data.username
-		let password = data.password
+		let username = data.username;
+		let password = data.password;
 
 		if (username.length<1) {
-			basicModal.error('username')
+			basicModal.error('username');
 			return false
 		}
 
 		if (password.length<1) {
-			basicModal.error('password')
+			basicModal.error('password');
 			return false
 		}
 
-		basicModal.close()
+		basicModal.close();
 
 		let params = {
 			username,
 			password
-		}
+		};
 
 		api.post('Settings::setLogin', params, function(data) {
 
@@ -177,7 +177,7 @@ settings.createLogin = function() {
 
 		})
 
-	}
+	};
 
 	let msg = `
 	          <p>
@@ -185,7 +185,7 @@ settings.createLogin = function() {
 	              <input name='username' class='text' type='text' placeholder='New Username' value=''>
 	              <input name='password' class='text' type='password' placeholder='New Password' value=''>
 	          </p>
-	          `
+	          `;
 
 	basicModal.show({
 		body: msg,
@@ -197,38 +197,38 @@ settings.createLogin = function() {
 		}
 	})
 
-}
+};
 
 settings.setLogin = function() {
 
 	const action = function(data) {
 
-		let oldPassword = data.oldPassword || ''
-		let username    = data.username    || ''
-		let password    = data.password    || ''
+		let oldPassword = data.oldPassword || '';
+		let username    = data.username    || '';
+		let password    = data.password    || '';
 
 		if (oldPassword.length<1) {
-			basicModal.error('oldPassword')
+			basicModal.error('oldPassword');
 			return false
 		}
 
 		if (username.length<1) {
-			basicModal.error('username')
+			basicModal.error('username');
 			return false
 		}
 
 		if (password.length<1) {
-			basicModal.error('password')
+			basicModal.error('password');
 			return false
 		}
 
-		basicModal.close()
+		basicModal.close();
 
 		let params = {
 			oldPassword,
 			username,
 			password
-		}
+		};
 
 		api.post('Settings::setLogin', params, function(data) {
 
@@ -236,7 +236,7 @@ settings.setLogin = function() {
 
 		})
 
-	}
+	};
 
 	let msg = `
 	          <p>
@@ -248,7 +248,7 @@ settings.setLogin = function() {
 	              <input name='username' class='text' type='text' placeholder='New Username' value=''>
 	              <input name='password' class='text' type='password' placeholder='New Password' value=''>
 	          </p>
-	          `
+	          `;
 
 	basicModal.show({
 		body: msg,
@@ -264,42 +264,42 @@ settings.setLogin = function() {
 		}
 	})
 
-}
+};
 
 settings.setSorting = function() {
 
-	let sortingPhotos = []
-	let sortingAlbums = []
+	let sortingPhotos = [];
+	let sortingAlbums = [];
 
 	const action = function() {
 
-		sortingAlbums[0] = $('.basicModal select#settings_albums_type').val()
-		sortingAlbums[1] = $('.basicModal select#settings_albums_order').val()
+		sortingAlbums[0] = $('.basicModal select#settings_albums_type').val();
+		sortingAlbums[1] = $('.basicModal select#settings_albums_order').val();
 
-		sortingPhotos[0] = $('.basicModal select#settings_photos_type').val()
-		sortingPhotos[1] = $('.basicModal select#settings_photos_order').val()
+		sortingPhotos[0] = $('.basicModal select#settings_photos_type').val();
+		sortingPhotos[1] = $('.basicModal select#settings_photos_order').val();
 
-		basicModal.close()
-		albums.refresh()
+		basicModal.close();
+		albums.refresh();
 
 		let params = {
 			typeAlbums  : sortingAlbums[0],
 			orderAlbums : sortingAlbums[1],
 			typePhotos  : sortingPhotos[0],
 			orderPhotos : sortingPhotos[1]
-		}
+		};
 
 		api.post('Settings::setSorting', params, function(data) {
 
 			if (data===true) {
-				lychee.sortingAlbums = 'ORDER BY ' + sortingAlbums[0] + ' ' + sortingAlbums[1]
-				lychee.sortingPhotos = 'ORDER BY ' + sortingPhotos[0] + ' ' + sortingPhotos[1]
+				lychee.sortingAlbums = 'ORDER BY ' + sortingAlbums[0] + ' ' + sortingAlbums[1];
+				lychee.sortingPhotos = 'ORDER BY ' + sortingPhotos[0] + ' ' + sortingPhotos[1];
 				lychee.load()
 			} else lychee.error(null, params, data)
 
 		})
 
-	}
+	};
 
 	let msg = `
 	          <p>
@@ -343,7 +343,7 @@ settings.setSorting = function() {
 	              </span>
 	              order.
 	          </p>
-	          `
+	          `;
 
 	basicModal.show({
 		body: msg,
@@ -357,58 +357,58 @@ settings.setSorting = function() {
 				fn: basicModal.close
 			}
 		}
-	})
+	});
 
 	if (lychee.sortingAlbums!=='') {
 
-		sortingAlbums = lychee.sortingAlbums.replace('ORDER BY ', '').split(' ')
+		sortingAlbums = lychee.sortingAlbums.replace('ORDER BY ', '').split(' ');
 
-		$('.basicModal select#settings_albums_type').val(sortingAlbums[0])
+		$('.basicModal select#settings_albums_type').val(sortingAlbums[0]);
 		$('.basicModal select#settings_albums_order').val(sortingAlbums[1])
 
 	}
 
 	if (lychee.sortingPhotos!=='') {
 
-		sortingPhotos = lychee.sortingPhotos.replace('ORDER BY ', '').split(' ')
+		sortingPhotos = lychee.sortingPhotos.replace('ORDER BY ', '').split(' ');
 
-		$('.basicModal select#settings_photos_type').val(sortingPhotos[0])
+		$('.basicModal select#settings_photos_type').val(sortingPhotos[0]);
 		$('.basicModal select#settings_photos_order').val(sortingPhotos[1])
 
 	}
 
-}
+};
 
 settings.setDropboxKey = function(callback) {
 
 	const action = function(data) {
 
-		let key = data.key
+		let key = data.key;
 
 		if (data.key.length<1) {
-			basicModal.error('key')
+			basicModal.error('key');
 			return false
 		}
 
-		basicModal.close()
+		basicModal.close();
 
 		api.post('Settings::setDropboxKey', { key }, function(data) {
 
 			if (data===true) {
-				lychee.dropboxKey = key
+				lychee.dropboxKey = key;
 				if (callback) lychee.loadDropbox(callback)
 			} else lychee.error(null, params, data)
 
 		})
 
-	}
+	};
 
 	let msg = lychee.html`
 	          <p>
 	              In order to import photos from your Dropbox, you need a valid drop-ins app key from <a href='https://www.dropbox.com/developers/apps/create'>their website</a>. Generate yourself a personal key and enter it below:
 	              <input class='text' name='key' type='text' placeholder='Dropbox API Key' value='$${ lychee.dropboxKey }'>
 	          </p>
-	          `
+	          `;
 
 	basicModal.show({
 		body: msg,
@@ -424,4 +424,4 @@ settings.setDropboxKey = function(callback) {
 		}
 	})
 
-}
+};
